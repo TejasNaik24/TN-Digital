@@ -1,0 +1,404 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   TN Digital — design system
+   Everything visual is a token. No arbitrary colours, sizes, or timings live in
+   components; if a value is used twice it belongs here.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@import '@fontsource-variable/geist/wght.css';
+@import '@fontsource-variable/geist-mono/wght.css';
+@import 'tailwindcss';
+
+@theme {
+  /* ── Surfaces ──────────────────────────────────────────────────────────────
+     Never pure #000: it smears on OLED and kills the sense of depth.          */
+  --color-canvas: #04060c;
+  --color-elevated: #070b14;
+  --color-surface: #0a0f1b;
+  --color-surface-2: #0e1422;
+  --color-surface-3: #131a2b;
+
+  /* Borders read as light catching an edge, so they carry a blue cast. */
+  --color-hairline: rgb(150 178 255 / 0.09);
+  --color-hairline-soft: rgb(150 178 255 / 0.05);
+  --color-hairline-strong: rgb(150 178 255 / 0.2);
+
+  /* ── Text ──────────────────────────────────────────────────────────────────
+     Measured against --color-canvas: ink 17:1, ink-2 7.9:1, ink-3 4.8:1.
+     ink-4 sits at 2.7:1 and is DECORATION ONLY — the blueprint dimension marks
+     and the pull-quote glyph, both aria-hidden. Never use it for text a
+     visitor is meant to read.                                                */
+  --color-ink: #eaeff8;
+  --color-ink-2: #94a2be;
+  --color-ink-3: #6e7c97;
+  --color-ink-4: #4a5570;
+
+  /* ── Accents ───────────────────────────────────────────────────────────────
+     Used sparingly. The page stays overwhelmingly dark.                       */
+  --color-azure: #4d8dff;
+  --color-indigo: #6366f1;
+  --color-violet: #8b5cf6;
+  --color-aqua: #22d3ee;
+  --color-amber: #f0b357;
+
+  /* ── Type ──────────────────────────────────────────────────────────────────
+     Two variable faces. Geist carries the editorial weight, Geist Mono carries
+     the engineering character (labels, numerals, chips).                      */
+  --font-sans:
+    'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Sized so the headline fills its column at 1440 without forced line breaks
+     — the browser balances it, which survives every viewport in between. */
+  --text-hero: clamp(2.375rem, 1.2rem + 3.35vw, 3.75rem);
+  --text-hero--line-height: 1.06;
+  --text-hero--letter-spacing: -0.038em;
+
+  --text-display: clamp(1.875rem, 1.2rem + 2.4vw, 3rem);
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.03em;
+
+  --text-title: clamp(1.375rem, 1.15rem + 0.95vw, 1.875rem);
+  --text-title--line-height: 1.18;
+  --text-title--letter-spacing: -0.022em;
+
+  --text-lede: clamp(1.0625rem, 1rem + 0.34vw, 1.25rem);
+  --text-lede--line-height: 1.62;
+  --text-lede--letter-spacing: -0.011em;
+
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1;
+  --text-label--letter-spacing: 0.16em;
+
+  /* ── Motion ────────────────────────────────────────────────────────────────
+     One easing curve and three durations for the whole site. Consistency is
+     what separates "alive" from "everything is moving".                       */
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-soft: cubic-bezier(0.33, 1, 0.68, 1);
+
+  --radius-card: 1rem;
+  --radius-panel: 1.375rem;
+}
+
+:root {
+  /* Cursor position, lerped in JS. Consumed by the ambient glow layer. */
+  --mx: 50%;
+  --my: 30%;
+
+  --dur-hover: 220ms;
+  --dur-reveal: 700ms;
+
+  --shell: 80rem; /* max content width */
+  --gutter: clamp(1.25rem, 0.55rem + 3.2vw, 2.5rem);
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: var(--color-surface-3) transparent;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.65;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    margin: 0;
+    font-weight: 500;
+    text-wrap: balance;
+  }
+
+  p {
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  /* Visible, consistent, and never removed. */
+  :focus-visible {
+    outline: 2px solid var(--color-azure);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgb(77 141 255 / 0.28);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-surface-3);
+    border-radius: 999px;
+    border: 3px solid var(--color-canvas);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #1c2540;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Kill the browser's yellow autofill wash — it destroys a dark form. */
+  input:-webkit-autofill,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-ink);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-surface-2) inset;
+    caret-color: var(--color-ink);
+    transition: background-color 9999s ease-out;
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+/* ── Utilities ────────────────────────────────────────────────────────────── */
+
+@utility shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Glass is a supporting material — nav, cards, the form. Not everything. */
+@utility glass {
+  background: linear-gradient(
+    to bottom,
+    rgb(20 28 48 / 0.62),
+    rgb(10 15 27 / 0.62)
+  );
+  backdrop-filter: blur(20px) saturate(1.35);
+  -webkit-backdrop-filter: blur(20px) saturate(1.35);
+}
+
+@utility text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--color-azure) 0%,
+    var(--color-indigo) 46%,
+    var(--color-violet) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  /* Descenders get clipped by background-clip without a little breathing room. */
+  padding-bottom: 0.06em;
+}
+
+@utility mono-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* A 1px top edge highlight — the cheapest way to make a surface feel physical. */
+@utility edge-light {
+  position: relative;
+}
+@utility edge-light-after {
+  content: '';
+  position: absolute;
+  inset-inline: 1px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(180 205 255 / 0.22),
+    transparent
+  );
+}
+
+@utility grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* ── Composite effects ────────────────────────────────────────────────────────
+   Two hover treatments, used everywhere, both driven by --spot-x/--spot-y from
+   useSpotlight so the light blooms from where the cursor actually is.         */
+
+@layer components {
+  /* Buttons: a soft sheen that tracks the pointer across the surface. */
+  .btn-sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      120px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      rgb(255 255 255 / 0.24),
+      transparent 62%
+    );
+    transition: opacity 260ms var(--ease-expo);
+  }
+  .btn-sheen:hover::after {
+    opacity: 1;
+  }
+
+  /* Cards: the border lights up where the cursor is, and a faint wash of the
+     card's own accent colour lifts off the surface underneath it. */
+  .surface-card {
+    --glow: var(--color-azure);
+    position: relative;
+    isolation: isolate;
+  }
+
+  .surface-card::before,
+  .surface-card::after {
+    content: '';
+    position: absolute;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 320ms var(--ease-expo);
+  }
+
+  /* Gradient border, drawn as a masked 1px ring. */
+  .surface-card::before {
+    inset: 0;
+    z-index: 2;
+    padding: 1px;
+    background: radial-gradient(
+      260px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      var(--glow),
+      transparent 62%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+
+  /* Interior wash. */
+  .surface-card::after {
+    inset: 0;
+    z-index: 0;
+    background: radial-gradient(
+      340px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      color-mix(in oklab, var(--glow) 14%, transparent),
+      transparent 68%
+    );
+  }
+
+  .surface-card:hover::before,
+  .surface-card:focus-within::before {
+    opacity: 0.85;
+  }
+  .surface-card:hover::after,
+  .surface-card:focus-within::after {
+    opacity: 1;
+  }
+}
+
+/* ── Keyframes ────────────────────────────────────────────────────────────── */
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.62;
+  }
+  50% {
+    transform: translate3d(2%, -2.5%, 0) scale(1.1);
+    opacity: 0.92;
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.04);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate3d(-3%, 2%, 0) scale(1);
+    opacity: 0.78;
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes live-dot {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgb(34 211 238 / 0.5);
+  }
+  50% {
+    opacity: 0.72;
+    box-shadow: 0 0 0 5px rgb(34 211 238 / 0);
+  }
+}
+
+@keyframes caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────────
+   The site must still look designed with motion off, not merely functional.
+   Ambient layers keep their final composition; only movement stops.           */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
