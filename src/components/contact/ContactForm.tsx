@@ -3,7 +3,7 @@ import { AlertTriangle, Check, Loader2, Mail } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { SelectField, TextAreaField, TextField } from './Field';
-import { isContactConfigured, sendEnquiry } from '@/lib/contact';
+import { buildMailto, isContactConfigured, sendEnquiry } from '@/lib/contact';
 import { EASE_EXPO } from '@/lib/motion';
 import {
   EMPTY_CONTACT,
@@ -82,20 +82,15 @@ export function ContactForm() {
       return;
     }
 
-    if (result.status === 'unconfigured') {
-      // No endpoint yet. Say so, and hand over a prefilled email instead —
-      // never swallow the message.
-      setStatus('error');
-      setFallbackMailto(result.mailto);
-      setProblem(
-        'This form isn’t connected to a delivery service yet. Your message is ready to send by email instead.',
-      );
-      return;
-    }
-
+    // Unconfigured or a genuine send failure — either way, hand over a
+    // prefilled email instead. Never swallow the message.
     setStatus('error');
-    setFallbackMailto('');
-    setProblem(result.reason);
+    setFallbackMailto(buildMailto(values));
+    setProblem(
+      result.status === 'unconfigured'
+        ? 'This form isn’t connected to a delivery service yet. Your message is ready to send by email instead.'
+        : result.reason,
+    );
   }
 
   if (status === 'success') {
@@ -240,7 +235,7 @@ export function ContactForm() {
         <p className="order-2 text-[0.8125rem] text-ink-3 sm:order-1">
           {isContactConfigured
             ? 'I reply personally, usually within a day.'
-            : 'Endpoint not configured yet — see .env.example.'}
+            : 'EmailJS not configured yet — see .env.example.'}
         </p>
 
         <Button
