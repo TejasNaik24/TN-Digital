@@ -84,7 +84,7 @@ export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <Section id="faq" labelledBy="faq-heading" className="py-16 sm:py-20 lg:py-24">
+    <Section id="faq" labelledBy="faq-heading" tone="raised" space="tight">
       <Shell>
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-16">
           <SectionHeading

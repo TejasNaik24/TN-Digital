@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useInView } from 'motion/react';
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 import { EASE_EXPO } from '@/lib/motion';
 import { useReducedMotionSafe } from '@/hooks/useReducedMotionSafe';
@@ -9,22 +9,28 @@ import { useReducedMotionSafe } from '@/hooks/useReducedMotionSafe';
  * different kind of site.
  *
  * This is the hero's whole argument: it says "I build websites" without a
- * sentence of explanation. Restraint is what keeps it premium — one layout at a
- * time, a slow cadence, no bouncing, no flashing. It stops entirely when
- * scrolled out of view, and under reduced motion it renders a single finished
- * layout with no cycling at all.
+ * sentence of explanation.
  *
- * Everything inside is sized in container-query units, so the proportions are
- * identical whether the device is 340px or 640px wide.
+ * The content is deliberately REAL TEXT rather than grey placeholder bars.
+ * Bars read as a skeleton loader — an unfinished mockup — which is the opposite
+ * of the impression this site is selling. Real words, even at 10px, read as a
+ * finished website.
+ *
+ * Everything is sized in container-query units, so proportions are identical
+ * whether the device is 340px or 640px wide. On a phone the small type becomes
+ * texture rather than copy, which is fine; the composition still reads.
  */
 
-const CYCLE_MS = 7600;
+/** Long enough that each layout sits finished and still for most of its turn —
+ *  the assembly is the point, but a site that is always mid-animation reads as
+ *  a demo rather than a product. */
+const CYCLE_MS = 9200;
 
 /* ── Motion ─────────────────────────────────────────────────────────────── */
 
 const stage = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.055, delayChildren: 0.12 } },
+  visible: { transition: { staggerChildren: 0.038, delayChildren: 0.1 } },
   exit: { opacity: 0, transition: { duration: 0.34, ease: EASE_EXPO } },
 };
 
@@ -34,41 +40,39 @@ const rise = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_EXPO } },
 };
 
-/** Text bars get drawn left-to-right, like type being set. */
-const draw = {
-  hidden: { opacity: 0, scaleX: 0 },
-  visible: { opacity: 1, scaleX: 1, transition: { duration: 0.55, ease: EASE_EXPO } },
+/**
+ * Type gets wiped in from the left, like a line being set. A clip-path wipe
+ * rather than scaleX — scaling would squash the glyphs.
+ */
+const setType = {
+  hidden: { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
+  visible: {
+    opacity: 1,
+    clipPath: 'inset(0 0% 0 0)',
+    transition: { duration: 0.45, ease: EASE_EXPO },
+  },
 };
 
 /* ── Primitives ─────────────────────────────────────────────────────────── */
 
-type Tone = 'dim' | 'mid' | 'bright' | 'accent';
-
-const tones: Record<Tone, string> = {
-  dim: 'bg-white/[0.07]',
-  mid: 'bg-white/[0.13]',
-  bright: 'bg-white/[0.3]',
-  accent:
-    'bg-[linear-gradient(90deg,var(--color-azure),var(--color-violet))] opacity-90',
+type TxtProps = {
+  children: ReactNode;
+  /** Font size in cqw. */
+  size?: number;
+  className?: string;
+  style?: CSSProperties;
 };
 
-function Bar({
-  w,
-  h = 2,
-  tone = 'mid',
-  className,
-}: {
-  w: number | string;
-  h?: number;
-  tone?: Tone;
-  className?: string;
-}) {
+/** A line of real type inside the miniature site. */
+function Txt({ children, size = 1.7, className, style }: TxtProps) {
   return (
     <motion.div
-      variants={draw}
-      className={cn('origin-left rounded-full', tones[tone], className)}
-      style={{ width: typeof w === 'number' ? `${w}%` : w, height: `${h}cqw` }}
-    />
+      variants={setType}
+      className={cn('whitespace-nowrap leading-[1.15]', className)}
+      style={{ fontSize: `${size}cqw`, ...style }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -79,7 +83,7 @@ function Block({
 }: {
   className?: string;
   style?: CSSProperties;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <motion.div
@@ -95,17 +99,34 @@ function Block({
   );
 }
 
-function Pill({ w, accent = false }: { w: number; accent?: boolean }) {
+function Btn({
+  children,
+  accent = false,
+}: {
+  children: ReactNode;
+  accent?: boolean;
+}) {
   return (
     <motion.div
       variants={rise}
       className={cn(
-        'rounded-full',
+        'flex items-center rounded-full px-[2.4cqw] py-[1.1cqw] font-medium leading-none',
         accent
-          ? 'bg-[linear-gradient(90deg,var(--color-azure),var(--color-indigo))]'
-          : 'bg-white/[0.11]',
+          ? 'bg-[linear-gradient(90deg,var(--color-azure),var(--color-indigo))] text-white'
+          : 'border border-white/[0.14] text-white/70',
       )}
-      style={{ width: `${w}cqw`, height: `3.2cqw` }}
+      style={{ fontSize: '1.5cqw' }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function Mark({ size = 2.6 }: { size?: number }) {
+  return (
+    <div
+      className="shrink-0 rounded-[0.7cqw] bg-[linear-gradient(135deg,var(--color-azure),var(--color-violet))]"
+      style={{ width: `${size}cqw`, height: `${size}cqw` }}
     />
   );
 }
@@ -116,31 +137,45 @@ function MarketingLayout() {
   return (
     <>
       <motion.div variants={rise} className="flex items-center justify-between">
-        <div className="flex items-center gap-[1.6cqw]">
-          <div className="size-[2.6cqw] rounded-[0.7cqw] bg-[linear-gradient(135deg,var(--color-azure),var(--color-violet))]" />
-          <Bar w="7cqw" h={1.3} tone="mid" />
+        <div className="flex items-center gap-[1.5cqw]">
+          <Mark />
+          <span
+            className="font-semibold tracking-[-0.02em] text-white/90"
+            style={{ fontSize: '2cqw' }}
+          >
+            Lumen
+          </span>
         </div>
-        <div className="flex items-center gap-[2.4cqw]">
-          <Bar w="4cqw" h={1.1} tone="dim" />
-          <Bar w="4cqw" h={1.1} tone="dim" />
-          <Bar w="4cqw" h={1.1} tone="dim" />
-          <Pill w={10} accent />
+        <div className="flex items-center gap-[2.6cqw] text-white/45">
+          <span style={{ fontSize: '1.55cqw' }}>Product</span>
+          <span style={{ fontSize: '1.55cqw' }}>Pricing</span>
+          <span style={{ fontSize: '1.55cqw' }}>About</span>
+          <Btn accent>Get started</Btn>
         </div>
       </motion.div>
 
-      <div className="mt-[7cqw] flex items-start gap-[5cqw]">
-        <div className="flex w-[52%] flex-col gap-[2.2cqw]">
-          <Bar w={44} h={1.4} tone="accent" className="mb-[1cqw]" />
-          <Bar w={100} h={4.4} tone="bright" />
-          <Bar w={78} h={4.4} tone="bright" />
-          <Bar w={92} h={4.4} tone="accent" />
-          <div className="mt-[2.4cqw] flex flex-col gap-[1.4cqw]">
-            <Bar w={88} h={1.5} tone="dim" />
-            <Bar w={72} h={1.5} tone="dim" />
+      <div className="mt-[6.5cqw] flex items-start gap-[5cqw]">
+        <div className="flex w-[54%] flex-col">
+          <Txt
+            size={1.35}
+            className="font-mono uppercase tracking-[0.22em] text-azure"
+          >
+            Platform
+          </Txt>
+
+          <div className="mt-[2.4cqw] flex flex-col gap-[0.9cqw] font-semibold tracking-[-0.035em] text-white/92">
+            <Txt size={5.2}>Grow without</Txt>
+            <Txt size={5.2}>the guesswork.</Txt>
           </div>
-          <div className="mt-[2.6cqw] flex gap-[1.8cqw]">
-            <Pill w={17} accent />
-            <Pill w={14} />
+
+          <div className="mt-[2.6cqw] flex flex-col gap-[0.7cqw] text-white/40">
+            <Txt size={1.7}>Everything your team needs to launch,</Txt>
+            <Txt size={1.7}>measure, and scale — in one place.</Txt>
+          </div>
+
+          <div className="mt-[3cqw] flex gap-[1.6cqw]">
+            <Btn accent>Start free</Btn>
+            <Btn>Book a demo</Btn>
           </div>
         </div>
 
@@ -149,12 +184,19 @@ function MarketingLayout() {
             className="absolute inset-0"
             style={{
               background:
-                'radial-gradient(80% 70% at 30% 20%, rgb(77 141 255 / 0.3), transparent 70%), radial-gradient(70% 60% at 85% 90%, rgb(139 92 246 / 0.28), transparent 70%)',
+                'radial-gradient(80% 70% at 30% 20%, rgb(77 141 255 / 0.32), transparent 70%), radial-gradient(70% 60% at 85% 90%, rgb(139 92 246 / 0.3), transparent 70%)',
             }}
           />
-          <div className="absolute inset-x-[8%] bottom-[10%] flex flex-col gap-[1.4cqw]">
-            <Bar w={62} h={1.6} tone="bright" />
-            <Bar w={40} h={1.2} tone="mid" />
+          <div className="absolute inset-x-[9%] bottom-[9%]">
+            <div
+              className="font-medium text-white/80"
+              style={{ fontSize: '1.75cqw' }}
+            >
+              Live overview
+            </div>
+            <div className="mt-[0.6cqw] text-white/35" style={{ fontSize: '1.4cqw' }}>
+              Updated moments ago
+            </div>
           </div>
         </Block>
       </div>
@@ -164,51 +206,92 @@ function MarketingLayout() {
 
 /* ── Layout B — a product dashboard ─────────────────────────────────────── */
 
+const NAV_ITEMS = ['Overview', 'Reports', 'Customers', 'Billing', 'Settings'];
+
+/** Figures inside a fictional product UI — the kind every dashboard mockup
+ *  carries. They describe the demo screen, not this studio. */
+const STATS = [
+  { label: 'Revenue', value: '$48.2k' },
+  { label: 'Active users', value: '1,284' },
+  { label: 'Conversion', value: '3.4%' },
+];
+
 function DashboardLayout() {
   const reduced = useReducedMotionSafe();
 
   return (
-    <div className="flex h-full gap-[3cqw]">
+    <div className="flex h-full gap-[2.6cqw]">
       <motion.div
         variants={rise}
-        className="flex w-[13%] flex-col gap-[2.2cqw] rounded-[1.4cqw] border border-white/[0.06] bg-white/[0.025] p-[2cqw]"
+        className="flex w-[19%] shrink-0 flex-col gap-[1.7cqw] rounded-[1.4cqw] border border-white/[0.06] bg-white/[0.025] p-[1.8cqw]"
       >
-        <div className="size-[2.4cqw] rounded-[0.6cqw] bg-[linear-gradient(135deg,var(--color-azure),var(--color-violet))]" />
-        {[0.28, 0.16, 0.16, 0.16, 0.16].map((opacity, index) => (
+        <div className="flex items-center gap-[1.1cqw]">
+          <Mark size={2.2} />
+          <span
+            className="font-semibold tracking-[-0.02em] text-white/85"
+            style={{ fontSize: '1.7cqw' }}
+          >
+            Vela
+          </span>
+        </div>
+        {NAV_ITEMS.map((item, index) => (
           <div
-            key={index}
-            className="h-[1.6cqw] rounded-full bg-white"
-            style={{ opacity, width: index === 0 ? '80%' : '62%' }}
-          />
+            key={item}
+            className={cn(
+              'truncate',
+              index === 0 ? 'font-medium text-white/80' : 'text-white/35',
+            )}
+            style={{ fontSize: '1.5cqw' }}
+          >
+            {item}
+          </div>
         ))}
       </motion.div>
 
-      <div className="flex flex-1 flex-col gap-[2.4cqw]">
+      <div className="flex min-w-0 flex-1 flex-col gap-[2.2cqw]">
         <motion.div variants={rise} className="flex items-center justify-between">
-          <Bar w="16cqw" h={2.4} tone="bright" />
-          <div className="flex gap-[1.4cqw]">
-            <Pill w={9} />
-            <Pill w={12} accent />
+          <span
+            className="font-semibold tracking-[-0.025em] text-white/90"
+            style={{ fontSize: '2.6cqw' }}
+          >
+            Overview
+          </span>
+          <div className="flex gap-[1.2cqw]">
+            <Btn>Export</Btn>
+            <Btn accent>New report</Btn>
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-3 gap-[2.2cqw]">
-          {[0, 1, 2].map((index) => (
-            <Block key={index} className="p-[2cqw]">
-              <div className="flex flex-col gap-[1.4cqw]">
-                <Bar w={52} h={1.2} tone="dim" />
-                <Bar w={72} h={3} tone={index === 0 ? 'accent' : 'bright'} />
+        <div className="grid grid-cols-3 gap-[1.8cqw]">
+          {STATS.map((stat, index) => (
+            <Block key={stat.label} className="p-[1.7cqw]">
+              <div
+                className="truncate text-white/40"
+                style={{ fontSize: '1.4cqw' }}
+              >
+                {stat.label}
+              </div>
+              <div
+                className={cn(
+                  'mt-[0.9cqw] font-semibold tracking-[-0.03em]',
+                  index === 0 ? 'text-azure' : 'text-white/88',
+                )}
+                style={{ fontSize: '3.2cqw' }}
+              >
+                {stat.value}
               </div>
             </Block>
           ))}
         </div>
 
-        <Block className="relative flex-1 overflow-hidden p-[2cqw]">
-          <Bar w={26} h={1.3} tone="dim" />
+        <Block className="relative flex-1 overflow-hidden p-[1.7cqw]">
+          <div className="text-white/40" style={{ fontSize: '1.4cqw' }}>
+            Last 30 days
+          </div>
           <svg
             viewBox="0 0 300 90"
             preserveAspectRatio="none"
-            className="absolute inset-x-[4%] bottom-[8%] h-[62%] w-[92%]"
+            className="absolute inset-x-[4%] bottom-[8%] h-[58%] w-[92%]"
           >
             <defs>
               <linearGradient id="mini-line" x1="0" y1="0" x2="1" y2="0">
@@ -246,36 +329,66 @@ function DashboardLayout() {
 
 /* ── Layout C — an editorial portfolio ──────────────────────────────────── */
 
+const WORKS = [
+  {
+    name: 'Coastal House',
+    year: '2024',
+    wash: 'radial-gradient(70% 70% at 40% 30%, rgb(77 141 255 / 0.3), transparent 72%)',
+  },
+  {
+    name: 'Concrete Chapel',
+    year: '2025',
+    wash: 'radial-gradient(70% 70% at 60% 40%, rgb(139 92 246 / 0.3), transparent 72%)',
+  },
+  {
+    name: 'Glass Pavilion',
+    year: '2026',
+    wash: 'radial-gradient(70% 70% at 50% 60%, rgb(34 211 238 / 0.22), transparent 72%)',
+  },
+];
+
 function EditorialLayout() {
   return (
     <div className="flex h-full flex-col">
       <motion.div variants={rise} className="flex items-center justify-between">
-        <Bar w="9cqw" h={1.4} tone="mid" />
-        <div className="flex gap-[2.4cqw]">
-          <Bar w="4.5cqw" h={1.1} tone="dim" />
-          <Bar w="4.5cqw" h={1.1} tone="dim" />
-          <Bar w="4.5cqw" h={1.1} tone="dim" />
+        <span
+          className="font-semibold tracking-[0.12em] text-white/85"
+          style={{ fontSize: '1.9cqw' }}
+        >
+          ATELIER
+        </span>
+        <div className="flex gap-[2.6cqw] text-white/40">
+          <span style={{ fontSize: '1.5cqw' }}>Work</span>
+          <span style={{ fontSize: '1.5cqw' }}>Studio</span>
+          <span style={{ fontSize: '1.5cqw' }}>Contact</span>
         </div>
       </motion.div>
 
-      <div className="mt-[6cqw] flex flex-col items-center gap-[2cqw]">
-        <Bar w={62} h={5} tone="bright" className="origin-center" />
-        <Bar w={40} h={5} tone="accent" className="origin-center" />
-        <div className="mt-[1.6cqw] w-[46%]">
-          <Bar w={100} h={1.4} tone="dim" className="origin-center" />
+      <div className="mt-[5.5cqw] flex flex-col items-center gap-[1cqw] text-center">
+        <div className="flex flex-col items-center gap-[0.8cqw] font-semibold tracking-[-0.035em] text-white/92">
+          <Txt size={4.6}>Spaces that hold</Txt>
+          <Txt size={4.6}>their silence.</Txt>
+        </div>
+        <div className="mt-[1.4cqw] text-white/35">
+          <Txt size={1.55}>Selected works · 2019—2026</Txt>
         </div>
       </div>
 
-      <div className="mt-[6cqw] grid flex-1 grid-cols-3 gap-[2.2cqw]">
-        {[
-          'radial-gradient(70% 70% at 40% 30%, rgb(77 141 255 / 0.3), transparent 72%)',
-          'radial-gradient(70% 70% at 60% 40%, rgb(139 92 246 / 0.3), transparent 72%)',
-          'radial-gradient(70% 70% at 50% 60%, rgb(34 211 238 / 0.22), transparent 72%)',
-        ].map((background, index) => (
-          <Block key={index} className="relative overflow-hidden">
-            <div className="absolute inset-0" style={{ background }} />
-            <div className="absolute inset-x-[10%] bottom-[12%]">
-              <div className="h-[1.4cqw] w-[70%] rounded-full bg-white/25" />
+      <div className="mt-[5cqw] grid flex-1 grid-cols-3 gap-[2cqw]">
+        {WORKS.map((work) => (
+          <Block key={work.name} className="relative overflow-hidden">
+            <div className="absolute inset-0" style={{ background: work.wash }} />
+            <div className="absolute inset-x-0 bottom-0 h-[55%] bg-[linear-gradient(to_top,rgb(5_8_16/0.85),transparent)]" />
+            <div className="absolute inset-x-[9%] bottom-[9%]">
+              <div
+                className="truncate font-medium text-white/85"
+                style={{ fontSize: '1.5cqw' }}
+              >
+                {work.name}
+              </div>
+              <div className="text-white/35" style={{ fontSize: '1.3cqw' }}>
+                {work.year}
+              </div>
             </div>
           </Block>
         ))}
@@ -322,11 +435,16 @@ export function SelfBuildingSite({
   index: number;
   className?: string;
 }) {
+  const reduced = useReducedMotionSafe();
   const active = buildLayouts[index] ?? buildLayouts[0];
   const { Component } = active;
 
   return (
     <div
+      // An illustration of a website, not content. Without this a screen
+      // reader announces "Lumen Product Pricing Get started Grow without the
+      // guesswork…" as if it were part of the page.
+      aria-hidden="true"
       className={cn('relative size-full overflow-hidden', className)}
       style={{ containerType: 'inline-size' }}
     >
@@ -334,10 +452,11 @@ export function SelfBuildingSite({
         <motion.div
           key={active.id}
           variants={stage}
-          initial="hidden"
+          // Reduced motion skips the assembly and shows the finished layout.
+          initial={reduced ? 'visible' : 'hidden'}
           animate="visible"
           exit="exit"
-          className="absolute inset-0 p-[4cqw]"
+          className="absolute inset-0 p-[3.6cqw]"
         >
           <Component />
         </motion.div>

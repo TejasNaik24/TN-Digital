@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
-import { lockScroll } from '@/lib/scroll';
 
 /**
  * Freezes the page behind an overlay. Compensates for the scrollbar's width so
- * locking doesn't shift the whole layout sideways, and pauses Lenis too.
+ * locking doesn't shift the whole layout sideways.
  */
 export function useLockBodyScroll(locked: boolean): void {
   useEffect(() => {
@@ -16,12 +15,10 @@ export function useLockBodyScroll(locked: boolean): void {
 
     body.style.overflow = 'hidden';
     if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
-    lockScroll(true);
 
     return () => {
       body.style.overflow = previousOverflow;
       body.style.paddingRight = previousPadding;
-      lockScroll(false);
     };
   }, [locked]);
 }

@@ -9,18 +9,8 @@ import { Process } from '@/components/sections/Process';
 import { FAQ } from '@/components/sections/FAQ';
 import { Contact } from '@/components/sections/Contact';
 import { Footer } from '@/components/layout/Footer';
-import { useSmoothScroll } from '@/hooks/useSmoothScroll';
-import { useHasFinePointer } from '@/hooks/useMediaQuery';
-import { useReducedMotionSafe } from '@/hooks/useReducedMotionSafe';
 
 export default function App() {
-  const reduced = useReducedMotionSafe();
-  const finePointer = useHasFinePointer();
-
-  // Desktop only. Native momentum beats anything we'd simulate on touch, and
-  // reduced motion means the browser's own scrolling, untouched.
-  useSmoothScroll(finePointer && !reduced);
-
   return (
     <>
       <a

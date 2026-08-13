@@ -22,7 +22,9 @@ export function DeviceFrame({
       {/* Light pooling under the device — what makes it read as floating. */}
       <div
         aria-hidden="true"
-        className="absolute -inset-x-6 -bottom-10 h-32 rounded-[50%] blur-3xl"
+        // inset-x-0 rather than a negative inset: the glow used to spill past
+        // the shell and create a 2px horizontal scroll at 390px.
+        className="absolute inset-x-0 -bottom-10 h-32 rounded-[50%] blur-3xl"
         style={{
           background:
             'radial-gradient(ellipse at center, rgb(77 141 255 / 0.34), rgb(139 92 246 / 0.16) 45%, transparent 72%)',
@@ -116,8 +118,10 @@ export function BlueprintMarks() {
           <span className="h-2 w-px bg-azure/20" />
         </span>
 
-        {/* Height rule */}
-        <span className="absolute -right-7 bottom-0 top-0 flex w-px flex-col items-center gap-2">
+        {/* Height rule. Sits just inside the right edge rather than outside it:
+            the rotated label's visual box is far wider than its 1px layout box,
+            so an outside position pushed real horizontal scroll onto the page. */}
+        <span className="absolute bottom-0 right-1 top-0 flex w-px flex-col items-center gap-2">
           <span className="h-px w-2 bg-azure/20" />
           <span className="w-px flex-1 bg-azure/15" />
           <span className="mono-label rotate-90 text-[0.5rem] text-ink-4">900</span>

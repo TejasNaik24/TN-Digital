@@ -80,7 +80,11 @@ export function CaseStudyModal({
             </button>
 
             <div className="relative aspect-[16/10] max-h-[34dvh] overflow-hidden border-b border-hairline">
-              <ProjectVisual kind={project.visual} accent={project.accent} />
+              <ProjectVisual
+                kind={project.visual}
+                accent={project.accent}
+                name={project.name}
+              />
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgb(7_11_20/0.85),transparent_55%)]"

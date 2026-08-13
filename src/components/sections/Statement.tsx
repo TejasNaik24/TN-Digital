@@ -20,10 +20,12 @@ export function Statement() {
   return (
     <section aria-label="Why this matters" className="relative py-16 sm:py-20">
       <Shell>
-        <div ref={ref} className="relative mx-auto max-w-4xl">
+        {/* Left edge aligns with every other section's grid rather than
+            centring — a different left margin here reads as a mistake. */}
+        <div ref={ref} className="relative max-w-4xl">
           <span
             aria-hidden="true"
-            className="absolute -left-2 -top-9 select-none font-mono text-[5rem] leading-none text-ink-4/25 sm:-left-7 sm:text-[7rem]"
+            className="absolute -left-1 -top-9 select-none font-mono text-[5rem] leading-none text-ink-4/25 sm:-left-6 sm:text-[7rem]"
           >
             “
           </span>

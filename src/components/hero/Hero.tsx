@@ -57,8 +57,10 @@ export function Hero() {
       className="relative"
       aria-label="Introduction"
     >
-      <Shell className="relative pb-20 pt-32 sm:pt-36 lg:pb-28 lg:pt-40">
-        <div className="grid items-center gap-x-14 gap-y-16 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)]">
+      <Shell className="relative pb-16 pt-32 sm:pt-36 lg:pb-20 lg:pt-40">
+        {/* Device gets slightly more of the row than the copy — it is the proof,
+            and at 1fr it left a dead column to its right. */}
+        <div className="grid items-center gap-x-12 gap-y-14 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           {/* ── Copy ── */}
           <motion.div
             style={reduced ? undefined : { y: copyY, opacity: copyOpacity }}

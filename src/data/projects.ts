@@ -29,6 +29,8 @@ export type Project = {
   accent: string;
   /** Spans both columns in the work grid. */
   wide?: boolean;
+  /** Live demo, once one exists. The card opens the case study either way. */
+  href?: string;
 };
 
 export const projects: Project[] = [
@@ -48,7 +50,9 @@ export const projects: Project[] = [
     ],
     stack: ['React', 'TypeScript', 'Motion'],
     visual: 'editorial',
-    accent: '#9fb2d4',
+    // A cool slate-blue rather than a true neutral — a grey accent reads as
+    // "unstyled placeholder" against a grey-on-dark composition.
+    accent: '#8fa9d9',
     wide: true,
   },
   {

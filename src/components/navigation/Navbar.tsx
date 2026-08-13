@@ -27,13 +27,21 @@ export function Navbar() {
         initial={{ y: -24, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className={cn(
-          'fixed inset-x-0 top-0 z-40 transition-[background-color,border-color,backdrop-filter] duration-500',
-          scrolled
-            ? 'border-b border-hairline bg-canvas/70 backdrop-blur-xl'
-            : 'border-b border-transparent',
-        )}
+        className="fixed inset-x-0 top-0 z-40"
       >
+        {/* The blurred surface is always mounted; only its opacity animates.
+            Toggling `backdrop-blur` itself as a class pops in/out abruptly in
+            Chrome — blur radius doesn't interpolate smoothly alongside other
+            transitioning properties. Fading a pre-blurred layer is a cheap,
+            GPU-friendly crossfade instead, so scrolling past the threshold
+            reads as a fade rather than a jump. */}
+        <div
+          aria-hidden="true"
+          className={cn(
+            'pointer-events-none absolute inset-0 -z-10 border-b border-hairline bg-canvas/70 backdrop-blur-xl transition-opacity duration-300 ease-out',
+            scrolled ? 'opacity-100' : 'opacity-0',
+          )}
+        />
         <div className="shell flex h-[4.5rem] items-center justify-between gap-6">
           <a
             href="#top"

@@ -16,7 +16,7 @@ export function Contact() {
   const reduced = useReducedMotionSafe();
 
   return (
-    <Section id="contact" labelledBy="contact-heading" className="relative">
+    <Section id="contact" labelledBy="contact-heading" space="loose" className="relative">
       {/* This section gets its own pool of light — it's where the page is
           asking for something, and it should feel like the destination. */}
       <div

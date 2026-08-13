@@ -6,7 +6,7 @@ import { technologies } from '@/data/tech';
 
 export function WhyMe() {
   return (
-    <Section id="why" labelledBy="why-heading">
+    <Section id="why" labelledBy="why-heading" tone="raised">
       <Shell>
         <SectionHeading
           id="why-heading"

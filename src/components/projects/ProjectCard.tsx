@@ -54,7 +54,11 @@ export function ProjectCard({
       >
         <div className="aspect-[16/10] overflow-hidden">
           <div className="size-full transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.035]">
-            <ProjectVisual kind={project.visual} accent={project.accent} />
+            <ProjectVisual
+              kind={project.visual}
+              accent={project.accent}
+              name={project.name}
+            />
           </div>
         </div>
         <div

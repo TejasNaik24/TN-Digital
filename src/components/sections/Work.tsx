@@ -19,17 +19,30 @@ function OpenSlotCard() {
       ref={ref}
       onPointerMove={onPointerMove}
       className={cn(
-        'surface-card group relative flex h-full min-h-[19rem] flex-col justify-between overflow-hidden rounded-panel p-7 sm:p-9',
+        'surface-card group relative flex h-full min-h-[19rem] flex-col justify-center overflow-hidden rounded-panel p-7 sm:p-9',
         'border border-dashed border-[rgb(150_178_255/0.16)] bg-surface/20',
         'transition-[transform,border-color] duration-[380ms] ease-[cubic-bezier(0.16,1,0.3,1)]',
         'hover:-translate-y-1 hover:border-[rgb(150_178_255/0.32)]',
         'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-azure has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-canvas',
       )}
     >
-      <span className="mono-label relative z-10 text-ink-3">Open slot</span>
+      {/* An empty browser frame, echoing the previews beside it — it makes the
+          slot read as reserved rather than as a card that failed to load. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-9 top-9 hidden overflow-hidden rounded-xl border border-hairline-soft opacity-60 transition-opacity duration-500 group-hover:opacity-100 sm:block"
+      >
+        <div className="flex h-7 items-center gap-1.5 border-b border-hairline-soft px-3">
+          <span className="size-1 rounded-full bg-ink-4/60" />
+          <span className="size-1 rounded-full bg-ink-4/60" />
+          <span className="size-1 rounded-full bg-ink-4/60" />
+        </div>
+        <div className="h-16 bg-[linear-gradient(180deg,rgb(150_178_255/0.04),transparent)]" />
+      </div>
 
-      <div className="relative z-10">
-        <h3 className="text-[1.625rem] font-medium leading-[1.15] tracking-[-0.03em] text-ink">
+      <div className="relative z-10 sm:mt-24">
+        <span className="mono-label text-ink-3">Open slot</span>
+        <h3 className="mt-5 text-[1.625rem] font-medium leading-[1.15] tracking-[-0.03em] text-ink">
           <button
             type="button"
             onClick={() => scrollToId('contact')}
@@ -60,7 +73,7 @@ export function Work() {
   const [active, setActive] = useState<Project | null>(null);
 
   return (
-    <Section id="work" labelledBy="work-heading">
+    <Section id="work" labelledBy="work-heading" space="loose">
       <Shell>
         <SectionHeading
           id="work-heading"
