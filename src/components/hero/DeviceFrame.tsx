@@ -34,7 +34,11 @@ export function DeviceFrame({
       <div
         className={cn(
           'relative overflow-hidden rounded-[0.95rem] border border-hairline-strong',
-          'bg-elevated/90 backdrop-blur-xl',
+          // Opaque, not `backdrop-blur`: this element floats and tilts with the
+          // cursor, so a backdrop-filter here made Safari re-sample and re-blur
+          // the ambient background on every one of those frames — continuously,
+          // just from moving the mouse across the hero.
+          'bg-elevated',
           'shadow-[0_1px_0_0_rgb(180_205_255/0.14)_inset,0_40px_90px_-30px_rgb(0_0_0/0.9),0_0_0_1px_rgb(4_6_12/0.6)]',
         )}
       >

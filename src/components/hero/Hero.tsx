@@ -74,7 +74,7 @@ export function Hero() {
               className="flex flex-wrap items-center gap-x-4 gap-y-3"
             >
               {site.availability.open && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/60 py-1.5 pl-2.5 pr-3.5 backdrop-blur-md">
+                <span className="inline-flex items-center gap-2 rounded-full border border-hairline bg-surface/75 py-1.5 pl-2.5 pr-3.5">
                   <span
                     aria-hidden="true"
                     className="size-1.5 rounded-full bg-aqua"

@@ -1,12 +1,18 @@
+import { useRef } from 'react';
 import { usePointerGlow } from '@/hooks/usePointerGlow';
 import { useHasFinePointer } from '@/hooks/useMediaQuery';
 import { useReducedMotionSafe } from '@/hooks/useReducedMotionSafe';
+
+/** Diameter of the glow element — 2x its gradient radius, so translating its
+ *  center to the cursor via transform:translate(-50%,-50%) lines up exactly
+ *  with the old 560px-radius gradient. */
+const GLOW_SIZE = 1120;
 
 /**
  * The room the site sits in.
  *
  * Five stacked layers, all fixed, all `pointer-events: none`, none of them
- * animated with JavaScript except the cursor glow's CSS variables:
+ * animated with JavaScript except the cursor glow, which moves via transform:
  *
  *   1. static radial light fields    — the base depth
  *   2. two slow drifting blooms      — the "breathing"
@@ -20,9 +26,10 @@ import { useReducedMotionSafe } from '@/hooks/useReducedMotionSafe';
 export function AmbientBackground() {
   const finePointer = useHasFinePointer();
   const reduced = useReducedMotionSafe();
+  const glowRef = useRef<HTMLDivElement>(null);
 
   // Touch devices get the ambient layers without the cursor tracking.
-  usePointerGlow(finePointer && !reduced);
+  usePointerGlow(finePointer && !reduced, glowRef);
 
   return (
     <div
@@ -41,22 +48,29 @@ export function AmbientBackground() {
         }}
       />
 
-      {/* 2 — breathing blooms. ~18–24s cycles: present, never a screensaver. */}
+      {/* 2 — breathing blooms. ~18–24s cycles: present, never a screensaver.
+             No `filter: blur()`. These are radial gradients that already fade
+             to transparent — stacking a 120px blur on top of an already-soft
+             gradient is visually redundant but enormously expensive to
+             rasterize, and because they animate continuously they can't be
+             cached. Safari pays that cost on every frame, forever, which
+             starves the main thread that a click needs. The falloff below is
+             widened slightly to match the old softness. */}
       <div
-        className="absolute -top-[18vh] left-[6vw] size-[52vw] max-h-[720px] max-w-[720px] rounded-full blur-[120px]"
+        className="absolute -top-[18vh] left-[6vw] size-[52vw] max-h-[720px] max-w-[720px] rounded-full"
         style={{
           background:
-            'radial-gradient(circle, rgb(77 141 255 / 0.2), transparent 68%)',
+            'radial-gradient(circle, rgb(77 141 255 / 0.16) 0%, rgb(77 141 255 / 0.09) 38%, transparent 72%)',
           animation: reduced ? undefined : 'breathe 19s var(--ease-out-soft) infinite',
           opacity: reduced ? 0.7 : undefined,
           willChange: 'transform, opacity',
         }}
       />
       <div
-        className="absolute -right-[8vw] top-[8vh] size-[44vw] max-h-[620px] max-w-[620px] rounded-full blur-[130px]"
+        className="absolute -right-[8vw] top-[8vh] size-[44vw] max-h-[620px] max-w-[620px] rounded-full"
         style={{
           background:
-            'radial-gradient(circle, rgb(139 92 246 / 0.17), transparent 68%)',
+            'radial-gradient(circle, rgb(139 92 246 / 0.14) 0%, rgb(139 92 246 / 0.08) 38%, transparent 72%)',
           animation: reduced ? undefined : 'drift 24s var(--ease-out-soft) infinite',
           opacity: reduced ? 0.6 : undefined,
           willChange: 'transform, opacity',
@@ -79,20 +93,37 @@ export function AmbientBackground() {
         }}
       />
 
-      {/* 4 — the cursor glow. Low opacity and screen blend: the page notices
-              you, it doesn't shine a torch at you. */}
+      {/* 4 — the cursor glow. Low opacity: the page notices you, it doesn't
+              shine a torch at you.
+              No mix-blend-mode: it's a well-known Safari performance cliff —
+              WebKit falls back to CPU-assisted compositing for a blended
+              layer (and drags anything stacked with it along), while Chrome
+              composites it cheaply on the GPU. It cost nothing visually here
+              — a dark background makes plain alpha compositing and `screen`
+              blending nearly indistinguishable at this opacity.
+              Also fixed-size with a STATIC gradient, moved only via
+              `transform` (see usePointerGlow) — animating a gradient's own
+              center forces a repaint of its pixels every frame and can't be
+              composited, unlike a transform, which is compositor-only in
+              every engine. That fixed-position-gradient version was the
+              actual cause of "the mouse itself feels laggy" in Safari: it
+              fired on every hover, everywhere, continuously. */}
       {finePointer && !reduced && (
         <div
-          className="absolute inset-0 mix-blend-screen"
+          ref={glowRef}
+          className="absolute left-0 top-0 will-change-transform"
           style={{
+            width: GLOW_SIZE,
+            height: GLOW_SIZE,
             background:
-              'radial-gradient(560px circle at var(--mx) var(--my), rgb(96 150 255 / 0.07), rgb(139 92 246 / 0.03) 42%, transparent 68%)',
+              'radial-gradient(circle, rgb(96 150 255 / 0.09), rgb(139 92 246 / 0.04) 42%, transparent 68%)',
           }}
         />
       )}
 
-      {/* 5 — grain, to keep the gradients from banding on wide displays */}
-      <div className="grain absolute inset-0 opacity-[0.028] mix-blend-overlay" />
+      {/* 5 — grain, to keep the gradients from banding on wide displays.
+              Same reasoning as the cursor glow: no mix-blend-mode. */}
+      <div className="grain absolute inset-0 opacity-[0.035]" />
 
       {/* Floor: anchors the page so content doesn't float off the bottom edge */}
       <div className="absolute inset-x-0 bottom-0 h-64 bg-[linear-gradient(to_top,var(--color-canvas),transparent)]" />

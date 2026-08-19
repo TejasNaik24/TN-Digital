@@ -99,7 +99,7 @@ export function ContactForm() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE_EXPO }}
-        className="flex min-h-[28rem] flex-col items-start justify-center gap-5 rounded-panel border border-hairline bg-surface/50 p-8 backdrop-blur-xl sm:p-10"
+        className="flex min-h-[28rem] flex-col items-start justify-center gap-5 rounded-panel border border-hairline bg-surface/70 p-8 sm:p-10"
       >
         <span className="grid size-12 place-items-center rounded-full border border-aqua/30 bg-aqua/10 text-aqua">
           <Check className="size-5" strokeWidth={2} />
@@ -126,7 +126,7 @@ export function ContactForm() {
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="rounded-panel border border-hairline bg-surface/45 p-6 backdrop-blur-xl sm:p-8"
+      className="rounded-panel border border-hairline bg-surface/70 p-6 sm:p-8"
     >
       <div className="grid gap-5 sm:grid-cols-2">
         <TextField

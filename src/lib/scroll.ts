@@ -3,22 +3,33 @@ import { animate } from 'motion/react';
 /**
  * Anchor navigation.
  *
- * This used to run through Lenis, which was a mistake for two reasons:
+ * Three approaches, in order, and why each got replaced:
  *
- *  1. Lenis owns the scroll position, so a programmatic jump had to fight its
- *     rAF loop and whatever trailing wheel momentum was still queued. Every
- *     workaround (immediate, stop/start, reset) traded one artefact for
- *     another.
- *  2. Its default `scrollTo` easing is a lerp with no duration, which converges
- *     asymptotically — it crawls the last few hundred pixels, reading as lag.
+ *  1. Lenis. It owns the scroll position, so a programmatic jump had to fight
+ *     its rAF loop and whatever trailing wheel/trackpad momentum was still
+ *     queued.
+ *  2. Native `Element.scrollIntoView({ behavior: 'smooth' })`. Compositor-driven
+ *     and cheap on the main thread — but Safari's built-in easing for smooth
+ *     scroll has a much heavier "ease-in" ramp than Chrome's. It spends its
+ *     first ~100-200ms barely moving before becoming visible, which reads as
+ *     "click, pause, then it scrolls" even though nothing is actually blocked.
+ *     Browsers don't expose that curve to tune it.
+ *  3. A hand-rolled Motion `animate()` loop, tried once before this and pulled
+ *     for being janky *during* the scroll in Safari. That jank is gone now:
+ *     it was caused by `mix-blend-mode` and an animated gradient *position* in
+ *     `AmbientBackground` (see that file and `usePointerGlow`), both removed.
+ *     The cost was those specific paint sources needing to repaint on every
+ *     scroll frame, not the act of driving scroll from JS.
  *
- * Now the scroll is a plain Motion animation over `window.scrollY`. It starts
- * on the same frame as the click, runs on one known curve, and the user can
- * take back control at any point by scrolling.
+ * So: back to a custom animation, on top of the now-cheap background. An
+ * expo-out curve is front-loaded — real, visible motion from the very first
+ * frame, no ease-in ramp to read as a delay — and we control it exactly the
+ * same way in every engine, rather than trusting each browser's own curve.
  */
 
-/** Clears the sticky header. Must stay in sync with `scroll-mt-24` on Section. */
-const HEADER_OFFSET = 84;
+/** Matches the site's one easing curve (see `lib/motion.ts`) without importing
+ *  a component-layer module into this low-level utility. */
+const EASE_EXPO = [0.16, 1, 0.3, 1] as const;
 
 type Controls = { stop: () => void };
 
@@ -29,13 +40,11 @@ function prefersReducedMotion(): boolean {
 }
 
 /** Any real scroll input cancels the animation — a programmatic scroll must
- *  never feel like it is holding the page hostage. */
+ *  never feel like it's holding the page hostage. */
 const INTERRUPTS = ['wheel', 'touchstart'] as const;
 
 function detach(): void {
-  for (const type of INTERRUPTS) {
-    window.removeEventListener(type, cancel);
-  }
+  for (const type of INTERRUPTS) window.removeEventListener(type, cancel);
 }
 
 function cancel(): void {
@@ -50,7 +59,7 @@ function attach(): void {
   }
 }
 
-export function scrollToY(to: number): void {
+function scrollToY(to: number): void {
   cancel();
 
   const maxScroll = Math.max(
@@ -68,16 +77,14 @@ export function scrollToY(to: number): void {
     return;
   }
 
-  /* Long jumps take a little longer, but the curve is capped so crossing the
-     whole page never feels like waiting. */
-  const duration = Math.min(0.8, 0.3 + distance / 9000);
+  // Long jumps take a little longer, but the curve is capped so crossing the
+  // whole page never feels like waiting.
+  const duration = Math.min(0.7, 0.28 + distance / 9500);
 
   active = animate(from, target, {
     duration,
-    ease: [0.16, 1, 0.3, 1],
-    onUpdate: (value) => {
-      window.scrollTo(0, value);
-    },
+    ease: EASE_EXPO,
+    onUpdate: (value) => window.scrollTo(0, value),
     onComplete: () => {
       active = null;
       detach();
@@ -87,10 +94,17 @@ export function scrollToY(to: number): void {
   attach();
 }
 
-export function scrollToId(id: string): void {
-  const target = document.getElementById(id);
+function scrollToTarget(target: HTMLElement | null): void {
   if (!target) return;
-  scrollToY(target.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET);
+  // Read `scroll-margin-top` (Section's `scroll-mt-24`) rather than
+  // duplicating that offset as a second hardcoded constant here — one source
+  // of truth for what clears the sticky header.
+  const scrollMarginTop = parseFloat(getComputedStyle(target).scrollMarginTop) || 0;
+  scrollToY(target.getBoundingClientRect().top + window.scrollY - scrollMarginTop);
+}
+
+export function scrollToId(id: string): void {
+  scrollToTarget(document.getElementById(id));
 }
 
 export function scrollToTop(): void {

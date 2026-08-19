@@ -80,10 +80,6 @@
 }
 
 :root {
-  /* Cursor position, lerped in JS. Consumed by the ambient glow layer. */
-  --mx: 50%;
-  --my: 30%;
-
   --dur-hover: 220ms;
   --dur-reveal: 700ms;
 

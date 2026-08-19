@@ -346,7 +346,7 @@ function HospitalityVisual({ accent, name }: VisualProps) {
 
         {/* Booking bar — permanently reachable, which is the whole point. */}
         <div
-          className={cn(surface, 'flex items-center gap-[2cqw] p-[1.5cqw] backdrop-blur')}
+          className={cn(surface, 'flex items-center gap-[2cqw] p-[1.5cqw]')}
           style={{ background: '#ffffff09' }}
         >
           {BOOKING.map((field, index) => (

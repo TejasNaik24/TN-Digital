@@ -29,16 +29,20 @@ export function Navbar() {
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         className="fixed inset-x-0 top-0 z-40"
       >
-        {/* The blurred surface is always mounted; only its opacity animates.
-            Toggling `backdrop-blur` itself as a class pops in/out abruptly in
-            Chrome — blur radius doesn't interpolate smoothly alongside other
-            transitioning properties. Fading a pre-blurred layer is a cheap,
-            GPU-friendly crossfade instead, so scrolling past the threshold
-            reads as a fade rather than a jump. */}
+        {/* Solid surface, NOT `backdrop-filter`.
+            A backdrop-filter on a fixed, full-width header is the single worst
+            thing for scroll performance in Safari: WebKit re-samples and
+            re-blurs everything behind it on every scroll frame, and again on
+            any repaint inside the header — including a nav link's hover colour
+            transition. That's what made clicking a nav link stall for a beat
+            while the identical `scrollToId` call from a plain button elsewhere
+            on the page fired instantly. Chrome absorbs it; Safari does not.
+            At 92% over a near-black canvas the blur was contributing almost
+            nothing visually anyway. */}
         <div
           aria-hidden="true"
           className={cn(
-            'pointer-events-none absolute inset-0 -z-10 border-b border-hairline bg-canvas/70 backdrop-blur-xl transition-opacity duration-300 ease-out',
+            'pointer-events-none absolute inset-0 -z-10 border-b border-hairline bg-canvas/92 transition-opacity duration-300 ease-out',
             scrolled ? 'opacity-100' : 'opacity-0',
           )}
         />
@@ -75,14 +79,19 @@ export function Navbar() {
                       )}
                     >
                       {link.label}
-                      {isActive && (
-                        <motion.span
-                          layoutId="nav-active"
-                          aria-hidden="true"
-                          transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-                          className="absolute inset-0 -z-10 rounded-full border border-hairline bg-surface/60"
-                        />
-                      )}
+                      {/* Always mounted, opacity-only. This used to be a Motion
+                          `layoutId` shared-element FLIP, which forces a
+                          synchronous layout measurement every time the scroll
+                          spy changes the active link — and that fires
+                          repeatedly *during* a scroll. Cross-fading a
+                          per-item pill costs nothing and looks the same. */}
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'absolute inset-0 -z-10 rounded-full border border-hairline bg-surface/60 transition-opacity duration-300 ease-out',
+                          isActive ? 'opacity-100' : 'opacity-0',
+                        )}
+                      />
                     </a>
                   </li>
                 );

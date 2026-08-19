@@ -1,18 +1,32 @@
-import { useEffect } from 'react';
+import { useEffect, type RefObject } from 'react';
 
 /**
- * Writes a smoothed cursor position to `--mx` / `--my` on the root element.
+ * Moves a glow element to trail the cursor.
  *
- * The glow trails the pointer rather than snapping to it — that lag is the
- * whole effect. Two things keep it cheap: the loop only runs while the cursor
- * is actually travelling (it exits as soon as it catches up), and it stops
- * entirely when the tab is hidden. Nothing runs permanently in the background.
+ * This used to write a CSS custom property (`--mx`/`--my`) on the root
+ * element every frame, feeding a `radial-gradient(at var(--mx) var(--my))` on
+ * a full-viewport fixed layer. That's expensive in a way `transform` isn't:
+ * animating a gradient's *center* forces the browser to repaint those pixels
+ * every frame — it can't be composited the way a transform can — and it's
+ * particularly costly in Safari, which repaints large gradient areas far less
+ * efficiently than Chrome. The symptom was exactly "the mouse itself feels
+ * laggy" — it fires on every hover, everywhere on the page, continuously.
+ *
+ * Fix: the glow is a fixed-size element with a *static* gradient, and this
+ * hook only ever touches its `transform`. Moving a layer via transform is
+ * compositor-only — no repaint, no layout, cheap in every engine.
+ *
+ * The loop only runs while the cursor is actually travelling (it exits as
+ * soon as it catches up) and stops entirely when the tab is hidden.
  */
-export function usePointerGlow(enabled: boolean): void {
+export function usePointerGlow(
+  enabled: boolean,
+  ref: RefObject<HTMLElement | null>,
+): void {
   useEffect(() => {
-    if (!enabled) return;
+    const el = ref.current;
+    if (!enabled || !el) return;
 
-    const root = document.documentElement;
     let targetX = window.innerWidth / 2;
     let targetY = window.innerHeight * 0.3;
     let x = targetX;
@@ -21,8 +35,7 @@ export function usePointerGlow(enabled: boolean): void {
     let running = false;
 
     const write = () => {
-      root.style.setProperty('--mx', `${x.toFixed(1)}px`);
-      root.style.setProperty('--my', `${y.toFixed(1)}px`);
+      el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate3d(-50%, -50%, 0)`;
     };
 
     const tick = () => {
@@ -68,5 +81,5 @@ export function usePointerGlow(enabled: boolean): void {
       window.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
-  }, [enabled]);
+  }, [enabled, ref]);
 }

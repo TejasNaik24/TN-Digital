@@ -26,7 +26,7 @@ const variants: Record<Variant, string> = {
     'hover:shadow-[0_1px_0_0_rgb(255_255_255/0.28)_inset,0_16px_44px_-12px_rgb(99_102_241/0.9)]',
   ),
   secondary: cn(
-    'border border-hairline-strong bg-surface/50 text-ink backdrop-blur-md',
+    'border border-hairline-strong bg-surface/70 text-ink',
     'hover:border-[rgb(150_178_255/0.34)] hover:bg-surface-2/70',
   ),
   ghost: 'text-ink-2 hover:text-ink',
